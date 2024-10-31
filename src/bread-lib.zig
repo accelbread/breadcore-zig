@@ -17,3 +17,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 pub const log = @import("log.zig");
+pub const cli = @import("cli.zig");
+
+const std = @import("std");
+
+test {
+    _ = log;
+    _ = cli;
+}
