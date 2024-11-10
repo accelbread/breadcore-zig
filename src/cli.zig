@@ -29,40 +29,14 @@ pub const OptionGroup = struct {
 
 pub const Option = struct {
     /// Long name for option
-    long: ?[:0]const u8 = null,
+    long: ?[]const u8 = null,
     /// Char for short option
     short: ?u8 = null,
     /// If set, option takes a value (non-optional)
-    value: ?ArgValue = null,
+    /// Value of field is the name of value for help text
+    value: ?[]const u8 = null,
     /// Documentation string for help messages
     doc: ?[]const u8 = null,
-    /// Callback to call when option is found
-    /// False return will print help text.
-    callback: ?*const fn (
-        comptime name: [:0]const u8,
-        value: anytype,
-    ) bool = null,
-
-    const Self = @This();
-
-    fn result_field(comptime self: Self) Type.StructField {
-        const FieldType = ?if (self.value) |value| value.Type else void;
-        return .{
-            .name = self.long orelse &[1:0]u8{self.short orelse
-                @compileError("Option must have long and/or short set.")},
-            .type = FieldType,
-            .default_value = @ptrCast(&@as(FieldType, null)),
-            .is_comptime = false,
-            .alignment = @alignOf(FieldType),
-        };
-    }
-};
-
-pub const ArgValue = struct {
-    /// Name of value for help text
-    name: []const u8,
-    /// Type of value
-    Type: type = [*:0]u8,
 };
 
 pub const VersionInfo = struct {
@@ -115,41 +89,23 @@ pub const HelpInfo = struct {
 
 pub const ArgParser = struct {
     version_info: VersionInfo,
-    help_info: HelpInfo,
+    help_info: HelpInfo = .{},
     option_groups: []const OptionGroup = &.{},
-    /// Whether to move non-option args to the end of argv
-    reorder_args: bool = true,
-    /// If non-null, expected exact number of non-option args
-    non_option_args_count: ?usize = 0,
-    /// Minimum number of non-option args
-    /// Used if non_option_args_count is null.
-    non_option_args_min: ?usize = null,
+    /// Callback to call when option arg is found
+    option_handler: ?*const fn (
+        comptime option: @TypeOf(.enum_literal),
+        value: ?[:0]u8,
+    ) anyerror!void = null,
     /// Callback to call when non-option arg is found
-    non_option_callack: ?*const fn (value: []u8) bool = null,
-
-    const Self = @This();
-
-    fn ArgParseResult(comptime self: Self) type {
-        return @Type(.{ .Struct = .{
-            .layout = .auto,
-            .fields = fields: {
-                var fields: []const Type.StructField = &.{};
-                for (self.option_groups) |group| {
-                    for (group.options) |option| {
-                        fields = fields ++
-                            &[1]Type.StructField{option.result_field()};
-                    }
-                }
-                break :fields fields;
-            },
-            .decls = &.{},
-            .is_tuple = false,
-        } });
-    }
+    /// If set to all, non-option args are moved to the end of argv
+    non_option_handler: ?union {
+        each: *const fn (each: [:0]u8) anyerror!void,
+        all: *const fn (args: [][*:0]u8) anyerror!void,
+    } = null,
 };
 
 test "Args result" {
-    const MyArgs = (ArgParser{
+    const MyArgs = ArgParser{
         .version_info = .{
             .name = "Test App",
             .version = "0.0.0",
@@ -160,13 +116,9 @@ test "Args result" {
         .help_info = .{},
         .option_groups = &.{.{ .options = &.{
             .{ .long = "test-flag-a", .short = 'a' },
-            .{ .long = "test-flag-b", .value = .{ .name = "file" } },
+            .{ .long = "test-flag-b", .value = "file" },
             .{ .short = 'c' },
         } }},
-    }).ArgParseResult();
-
-    const args: MyArgs = .{};
-    try std.testing.expectEqual(?void, @TypeOf(args.@"test-flag-a"));
-    try std.testing.expectEqual(?[*:0]u8, @TypeOf(args.@"test-flag-b"));
-    try std.testing.expectEqual(?void, @TypeOf(args.c));
+    };
+    _ = &MyArgs;
 }
