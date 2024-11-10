@@ -1,3 +1,3 @@
-# bread-lib
+# breadcore
 
 Common library for Zig programs.

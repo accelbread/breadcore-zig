@@ -1,4 +1,4 @@
-// bread-lib -- Common library for Zig programs
+// breadcore -- Common library for Zig programs
 // Copyright (C) 2024 Archit Gupta <archit@accelbread.com>
 //
 // This program is free software: you can redistribute it and/or modify it under

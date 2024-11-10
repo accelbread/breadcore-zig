@@ -1,4 +1,4 @@
-// bread-lib -- Common library for Zig programs
+// breadcore -- Common library for Zig programs
 // Copyright (C) 2024 Archit Gupta <archit@accelbread.com>
 //
 // This program is free software: you can redistribute it and/or modify it under
@@ -32,12 +32,12 @@ pub fn build(b: *std.Build) void {
         .preferred_optimize_mode = .ReleaseSafe,
     });
 
-    _ = b.addModule("bread-lib", .{
-        .root_source_file = b.path("src/bread-lib.zig"),
+    _ = b.addModule("breadcore", .{
+        .root_source_file = b.path("src/breadcore.zig"),
     });
 
     const unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/bread-lib.zig"),
+        .root_source_file = b.path("src/breadcore.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -46,8 +46,8 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_unit_tests.step);
 
     const check = b.addStaticLibrary(.{
-        .name = "bread-lib",
-        .root_source_file = b.path("src/bread-lib.zig"),
+        .name = "breadcore",
+        .root_source_file = b.path("src/breadcore.zig"),
         .target = target,
         .optimize = optimize,
     });
