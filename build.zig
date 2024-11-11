@@ -45,6 +45,15 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_unit_tests.step);
 
+    const run_coverage = b.addSystemCommand(&.{
+        "kcov",
+        "--clean",
+        b.pathJoin(&.{ b.install_path, "kcov" }),
+    });
+    run_coverage.addArtifactArg(unit_tests);
+    const coverage_step = b.step("coverage", "Generate unit test coverage");
+    coverage_step.dependOn(&run_coverage.step);
+
     const check = b.addStaticLibrary(.{
         .name = "breadcore",
         .root_source_file = b.path("src/breadcore.zig"),

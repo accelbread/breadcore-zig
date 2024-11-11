@@ -23,5 +23,6 @@
     flakelight-zig ./. {
       license = "AGPL-3.0-or-later";
       zigFlags = [ "--release" ];
+      devShell.packages = pkgs: [ pkgs.kcov ];
     };
 }
