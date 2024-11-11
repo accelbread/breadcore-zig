@@ -1,3 +1,3 @@
 # breadcore
 
-Common library for Zig programs.
+General-purpose utility library.

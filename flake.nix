@@ -1,4 +1,4 @@
-# breadcore -- Common library for Zig programs
+# breadcore -- General-purpose utility library
 # Copyright (C) 2024 Archit Gupta <archit@accelbread.com>
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -17,7 +17,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 {
-  description = "Common library for Zig programs.";
+  description = "General-purpose utility library.";
   inputs.flakelight-zig.url = "github:accelbread/flakelight-zig";
   outputs = { flakelight-zig, ... }:
     flakelight-zig ./. {
