@@ -48,9 +48,6 @@ pub fn logFn(
     var bw = std.io.bufferedWriter(stderr);
     const writer = bw.writer();
 
-    std.debug.lockStdErr();
-    defer std.debug.unlockStdErr();
-
     writer.print(fmt_str, args) catch return;
     bw.flush() catch return;
 }
