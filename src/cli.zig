@@ -18,6 +18,7 @@
 
 const std = @import("std");
 const Type = std.builtin.Type;
+const Writer = std.io.AnyWriter;
 
 pub const OptionGroup = struct {
     /// Group header
@@ -28,6 +29,8 @@ pub const OptionGroup = struct {
 };
 
 pub const Option = struct {
+    /// Identifier for option
+    id: @TypeOf(.enum_literal),
     /// Long name for option
     long: ?[]const u8 = null,
     /// Char for short option
@@ -94,18 +97,62 @@ pub const ArgParser = struct {
     /// Callback to call when option arg is found
     option_handler: ?*const fn (
         comptime option: @TypeOf(.enum_literal),
+        ctx: *anyopaque,
         value: ?[:0]u8,
     ) anyerror!void = null,
     /// Callback to call when non-option arg is found
     /// If set to all, non-option args are moved to the end of argv
-    non_option_handler: ?union {
-        each: *const fn (each: [:0]u8) anyerror!void,
-        all: *const fn (args: [][*:0]u8) anyerror!void,
+    non_option_handler: ?union(enum) {
+        each: *const fn (ctx: *anyopaque, arg: [:0]u8) anyerror!void,
+        all: *const fn (ctx: *anyopaque, args: [][*:0]u8) anyerror!void,
     } = null,
+
+    const Self = @This();
+
+    // TODO: handle --
+
+    fn parseArgs(
+        comptime self: Self,
+        argv: [][*:0]u8,
+        ctx: *anyopaque,
+        out: Writer,
+        err_out: Writer,
+    ) !void {
+        _ = err_out; // autofix
+        _ = out; // autofix
+        for (argv) |argp| {
+            const arg = std.mem.span(argp);
+
+            if ((arg.len <= 1) or (arg[0] != '-')) {
+                // non-option
+                if (self.non_option_handler) |handler| {
+                    switch (handler) {
+                        .each => |each_handler| try each_handler(ctx, arg),
+                        .all => @compileError("unimplemented"),
+                    }
+                } else {
+                    return error.UnexpectedArg;
+                }
+            } else {
+                // option
+            }
+        }
+    }
 };
 
 test "Args result" {
-    const MyArgs = ArgParser{
+    const Handlers = struct {
+        fn each_handler(ctx: *anyopaque, each: [:0]u8) anyerror!void {
+            const counter: *usize = @alignCast(@ptrCast(ctx));
+            counter.* += each.len;
+        }
+        fn nullWriter(context: *const anyopaque, bytes: []const u8) anyerror!usize {
+            _ = context;
+            return bytes.len;
+        }
+    };
+
+    const arg_info = ArgParser{
         .version_info = .{
             .name = "Test App",
             .version = "0.0.0",
@@ -115,10 +162,20 @@ test "Args result" {
         },
         .help_info = .{},
         .option_groups = &.{.{ .options = &.{
-            .{ .long = "test-flag-a", .short = 'a' },
-            .{ .long = "test-flag-b", .value = "file" },
-            .{ .short = 'c' },
+            .{ .id = .flag_a, .long = "test-flag-a", .short = 'a' },
+            .{ .id = .flag_b, .long = "test-flag-b", .value = "file" },
+            .{ .id = .c, .short = 'c' },
         } }},
+        .non_option_handler = .{ .each = Handlers.each_handler },
     };
-    _ = &MyArgs;
+
+    const writer: Writer = .{ .context = &{}, .writeFn = Handlers.nullWriter };
+    var counter: usize = 0;
+    var hello = "hello".*;
+    var world = "world".*;
+    var argv: [2][*:0]u8 = .{ &hello, &world };
+
+    try arg_info.parseArgs(&argv, &counter, writer, writer);
+
+    try std.testing.expectEqual(10, counter);
 }
