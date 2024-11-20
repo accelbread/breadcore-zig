@@ -54,6 +54,11 @@ pub fn build(b: *std.Build) void {
     const coverage_step = b.step("coverage", "Generate unit test coverage");
     coverage_step.dependOn(&run_coverage.step);
 
+    const unit_tests_check = b.addTest(.{
+        .root_source_file = b.path("src/breadcore.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
     const check_step = b.step("check", "Check if lib compiles");
-    check_step.dependOn(&unit_tests.step);
+    check_step.dependOn(&unit_tests_check.step);
 }
