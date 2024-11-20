@@ -46,7 +46,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_unit_tests.step);
 
     const run_coverage = b.addSystemCommand(
-        &.{ "kcov", "--clean" },
+        &.{ "kcov", "--clean", "--include-path=src" },
     );
     _ = run_coverage.addOutputDirectoryArg("kcov");
     run_coverage.addArtifactArg(unit_tests);
