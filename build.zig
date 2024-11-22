@@ -33,11 +33,11 @@ pub fn build(b: *std.Build) void {
     });
 
     _ = b.addModule("breadcore", .{
-        .root_source_file = b.path("src/breadcore.zig"),
+        .root_source_file = b.path("src/root.zig"),
     });
 
     const unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/breadcore.zig"),
+        .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -54,7 +54,7 @@ pub fn build(b: *std.Build) void {
     coverage_step.dependOn(&run_coverage.step);
 
     const unit_tests_check = b.addTest(.{
-        .root_source_file = b.path("src/breadcore.zig"),
+        .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
     });
