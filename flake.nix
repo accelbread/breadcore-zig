@@ -18,9 +18,13 @@
 
 {
   description = "General-purpose utility library.";
-  inputs.flakelight-zig.url = "github:accelbread/flakelight-zig";
-  outputs = { flakelight-zig, ... }:
+  inputs = {
+    flakelight-zig.url = "github:accelbread/flakelight-zig";
+    zig-master-flake.url = "github:accelbread/zig-master-flake";
+  };
+  outputs = { flakelight-zig, zig-master-flake, ... }:
     flakelight-zig ./. {
+      withOverlays = [ zig-master-flake.overlays.override-zig ];
       license = "AGPL-3.0-or-later";
       zigFlags = [ "--release" ];
       devShell.packages = pkgs: [ pkgs.kcov ];

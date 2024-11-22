@@ -36,7 +36,41 @@
         "type": "github"
       }
     },
+    "flakelight_2": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "lastModified": 1731933812,
+        "narHash": "sha256-PeuRDDq1DcHxbOmXWb3nWMp5PqWUn5PSKimNbUzWEaQ=",
+        "owner": "nix-community",
+        "repo": "flakelight",
+        "rev": "f4b26f683be5c9ac1ec05f968dbbcb35f4bb6346",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "flakelight",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
+      "locked": {
+        "lastModified": 1731676054,
+        "narHash": "sha256-OZiZ3m8SCMfh3B6bfGC/Bm4x3qc1m2SVEAlkV6iY7Yg=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "5e4fbfb6b3de1aa2872b76d49fafc942626e2add",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
       "locked": {
         "lastModified": 1731676054,
         "narHash": "sha256-OZiZ3m8SCMfh3B6bfGC/Bm4x3qc1m2SVEAlkV6iY7Yg=",
@@ -54,7 +88,31 @@
     },
     "root": {
       "inputs": {
-        "flakelight-zig": "flakelight-zig"
+        "flakelight-zig": "flakelight-zig",
+        "zig-master-flake": "zig-master-flake"
+      }
+    },
+    "zig-master-flake": {
+      "inputs": {
+        "flakelight": "flakelight_2",
+        "nixpkgs": [
+          "zig-master-flake",
+          "flakelight",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1732251575,
+        "narHash": "sha256-a721bGLajvO7uyRKOhCiSN4zuAWlDgWwSWkjEnpfrV4=",
+        "owner": "accelbread",
+        "repo": "zig-master-flake",
+        "rev": "663292a7a816acaf08479df3b81970e257e3f3f1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "accelbread",
+        "repo": "zig-master-flake",
+        "type": "github"
       }
     }
   },
