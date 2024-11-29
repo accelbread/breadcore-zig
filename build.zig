@@ -19,7 +19,7 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-pub fn build(b: *std.Build) void {
+pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{
         .default_target = .{
             .cpu_model = if (builtin.cpu.arch == .x86_64)
@@ -48,10 +48,12 @@ pub fn build(b: *std.Build) void {
     const run_coverage = b.addSystemCommand(
         &.{ "kcov", "--clean", "--include-path=src" },
     );
-    _ = run_coverage.addOutputDirectoryArg("kcov");
+    const coverage_path = run_coverage.addOutputDirectoryArg("kcov");
     run_coverage.addArtifactArg(unit_tests);
+    const open_coverage = b.addSystemCommand(&.{"xdg-open"});
+    open_coverage.addFileArg(try coverage_path.join(b.allocator, "index.html"));
     const coverage_step = b.step("coverage", "Generate unit test coverage");
-    coverage_step.dependOn(&run_coverage.step);
+    coverage_step.dependOn(&open_coverage.step);
 
     const unit_tests_check = b.addTest(.{
         .root_source_file = b.path("src/root.zig"),
