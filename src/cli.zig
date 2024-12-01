@@ -96,13 +96,14 @@ pub const ArgParser = struct {
     /// Callback to call when option arg is found
     option_handler: ?*const fn (
         comptime option: @Type(.enum_literal),
+        ctx: *anyopaque,
         value: ?[:0]u8,
     ) anyerror!void = null,
     /// Callback to call when non-option arg is found
     /// If set to all, non-option args are moved to the end of argv
-    non_option_handler: ?union {
-        each: *const fn (each: [:0]u8) anyerror!void,
-        all: *const fn (args: [][*:0]u8) anyerror!void,
+    non_option_handler: ?union(enum) {
+        each: *const fn (ctx: *anyopaque, arg: [:0]u8) anyerror!void,
+        all: *const fn (ctx: *anyopaque, args: [][*:0]u8) anyerror!void,
     } = null,
 };
 
