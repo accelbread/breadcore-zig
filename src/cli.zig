@@ -66,7 +66,7 @@ pub const LicenseInfo = struct {
     /// Text to include after license statement
     extra_text: ?[]const u8,
 
-    const @"AGPLv3+": @This() = .{
+    pub const @"AGPLv3+": LicenseInfo = .{
         .abbrev = "AGPLv3+",
         .full_name = "GNU AGPL version 3 or later",
         .link = "https://gnu.org/licenses/agpl.html",
@@ -114,7 +114,7 @@ test "Args result" {
             .version = "0.0.0",
             .copyright_year = "2024",
             .copyright_holder = "Fake Name <fake_name@example.com>",
-            .license_info = LicenseInfo.@"AGPLv3+",
+            .license_info = .@"AGPLv3+",
         },
         .help_info = .{},
         .option_groups = &.{.{ .options = &.{
