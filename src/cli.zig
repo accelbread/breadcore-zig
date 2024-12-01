@@ -28,6 +28,8 @@ pub const OptionGroup = struct {
 };
 
 pub const Option = struct {
+    /// Identifier for option
+    id: @Type(.enum_literal),
     /// Long name for option
     long: ?[]const u8 = null,
     /// Char for short option
@@ -93,7 +95,7 @@ pub const ArgParser = struct {
     option_groups: []const OptionGroup = &.{},
     /// Callback to call when option arg is found
     option_handler: ?*const fn (
-        comptime option: @TypeOf(.enum_literal),
+        comptime option: @Type(.enum_literal),
         value: ?[:0]u8,
     ) anyerror!void = null,
     /// Callback to call when non-option arg is found
@@ -115,9 +117,9 @@ test "Args result" {
         },
         .help_info = .{},
         .option_groups = &.{.{ .options = &.{
-            .{ .long = "test-flag-a", .short = 'a' },
-            .{ .long = "test-flag-b", .value = "file" },
-            .{ .short = 'c' },
+            .{ .id = .flag_a, .long = "test-flag-a", .short = 'a' },
+            .{ .id = .flag_b, .long = "test-flag-b", .value = "file" },
+            .{ .id = .c, .short = 'c' },
         } }},
     };
     _ = &MyArgs;
