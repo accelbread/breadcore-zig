@@ -104,6 +104,17 @@ pub fn standardBuild(
     const run_unit_tests = b.addRunArtifact(unit_tests);
     test_step.dependOn(&run_unit_tests.step);
 
+    if (config.build_type == .lib) {
+        const docs_step = b.step("docs", "Generate docs");
+
+        const install_docs = b.addInstallDirectory(.{
+            .source_dir = unit_tests.getEmittedDocs(),
+            .install_dir = .prefix,
+            .install_subdir = "docs",
+        });
+        docs_step.dependOn(&install_docs.step);
+    }
+
     const coverage_step = b.step("coverage", "Generate unit test coverage");
 
     const run_coverage = b.addSystemCommand(
