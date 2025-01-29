@@ -123,10 +123,12 @@ pub fn standardBuild(
     const coverage_path = run_coverage.addOutputDirectoryArg("kcov");
     run_coverage.addArtifactArg(unit_tests);
 
-    const open_coverage = b.addSystemCommand(&.{"xdg-open"});
-    open_coverage.addFileArg(try coverage_path.join(b.allocator, "index.html"));
-    open_coverage.step.dependOn(&run_coverage.step);
-    coverage_step.dependOn(&open_coverage.step);
+    const install_coverage = b.addInstallDirectory(.{
+        .source_dir = coverage_path,
+        .install_dir = .prefix,
+        .install_subdir = "kcov",
+    });
+    coverage_step.dependOn(&install_coverage.step);
 
     const check_step = b.step("check", "Check compilation");
 
