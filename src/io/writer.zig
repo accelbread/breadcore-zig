@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const std = @import("std");
+const virt = @import("../virt.zig");
 
 pub fn Writer(writeFn: anytype) type {
     const fn_info = @typeInfo(@TypeOf(writeFn)).@"fn";
@@ -46,31 +47,18 @@ pub fn Writer(writeFn: anytype) type {
             }
         }
 
-        const IntCtx = std.meta.Int(.unsigned, @sizeOf(Ctx) * 8);
-
         pub fn dyn(self: *const Self) DynWriter {
             if (Self == DynWriter) {
                 return self.*;
             }
             return .new(Vtable{
                 .write_impl = virtualWrite,
-                .ctx = if (@typeInfo(Ctx) == .pointer)
-                    @intFromPtr(self.ctx)
-                else if (@sizeOf(Ctx) <= @sizeOf(usize))
-                    @as(IntCtx, @bitCast(self.ctx))
-                else
-                    @intFromPtr(self),
+                .ctx = virt.packUsizeCtx(Ctx, &self.ctx),
             });
         }
 
         fn virtualWrite(ctx: usize, buf: []const u8) anyerror!usize {
-            const real_ctx: Ctx = if (@typeInfo(Ctx) == .pointer)
-                @ptrFromInt(ctx)
-            else if (@sizeOf(Ctx) <= @sizeOf(usize))
-                @bitCast(@as(IntCtx, @intCast(ctx)))
-            else
-                @as(*const Self, @ptrFromInt(ctx)).ctx;
-            return writeFn(real_ctx, buf);
+            return writeFn(virt.unpackUsizeCtx(Ctx, ctx), buf);
         }
     };
 }

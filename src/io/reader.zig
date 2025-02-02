@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const std = @import("std");
+const virt = @import("../virt.zig");
 
 pub fn Reader(readFn: anytype) type {
     const fn_info = @typeInfo(@TypeOf(readFn)).@"fn";
@@ -60,31 +61,18 @@ pub fn Reader(readFn: anytype) type {
             }
         }
 
-        const IntCtx = std.meta.Int(.unsigned, @sizeOf(Ctx) * 8);
-
         pub fn dyn(self: *const Self) DynReader {
             if (Self == DynReader) {
                 return self.*;
             }
             return .new(Vtable{
                 .read_impl = virtualRead,
-                .ctx = if (@typeInfo(Ctx) == .pointer)
-                    @intFromPtr(self.ctx)
-                else if (@sizeOf(Ctx) <= @sizeOf(usize))
-                    @as(IntCtx, @bitCast(self.ctx))
-                else
-                    @intFromPtr(self),
+                .ctx = virt.packUsizeCtx(Ctx, &self.ctx),
             });
         }
 
         fn virtualRead(ctx: usize, buf: []u8) anyerror!usize {
-            const real_ctx: Ctx = if (@typeInfo(Ctx) == .pointer)
-                @ptrFromInt(ctx)
-            else if (@sizeOf(Ctx) <= @sizeOf(usize))
-                @bitCast(@as(IntCtx, @intCast(ctx)))
-            else
-                @as(*const Self, @ptrFromInt(ctx)).ctx;
-            return readFn(real_ctx, buf);
+            return readFn(virt.unpackUsizeCtx(Ctx, ctx), buf);
         }
     };
 }

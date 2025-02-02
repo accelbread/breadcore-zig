@@ -16,16 +16,24 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-pub const io = @import("io.zig");
-pub const log = @import("log.zig");
-pub const cli = @import("cli.zig");
-pub const virt = @import("virt.zig");
+fn IntType(T: type) type {
+    return @Type(.{ .int = .{
+        .signedness = .unsigned,
+        .bits = @sizeOf(T) * 8,
+    } });
+}
 
-const std = @import("std");
+pub fn packUsizeCtx(RealType: type, ref: *const RealType) usize {
+    if (@sizeOf(RealType) <= @sizeOf(usize)) {
+        return @as(*const IntType(RealType), @ptrCast(ref)).*;
+    }
+    return @intFromPtr(ref);
+}
 
-test {
-    _ = io;
-    _ = log;
-    _ = cli;
-    _ = virt;
+pub fn unpackUsizeCtx(RealType: type, ctx: usize) RealType {
+    if (@sizeOf(RealType) <= @sizeOf(usize)) {
+        const val: IntType(RealType) = @intCast(ctx);
+        return @as(*const RealType, @ptrCast(&val)).*;
+    }
+    return @as(*const RealType, @ptrFromInt(ctx)).*;
 }
