@@ -20,6 +20,7 @@ pub const io = @import("io.zig");
 pub const log = @import("log.zig");
 pub const cli = @import("cli.zig");
 pub const virt = @import("virt.zig");
+pub const testing = @import("testing.zig");
 
 const std = @import("std");
 
@@ -28,4 +29,5 @@ test {
     _ = log;
     _ = cli;
     _ = virt;
+    _ = testing;
 }
