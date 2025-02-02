@@ -16,6 +16,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+const std = @import("std");
+
 const reader = @import("io/reader.zig");
 
 pub const Reader = reader.Reader;
@@ -54,7 +56,19 @@ pub const BufReader = struct {
     pub fn reader(self: *BufReader) Reader(read) {
         return .new(self);
     }
+
+    pub fn new(buf: []const u8) BufReader {
+        return .{ .buf = buf };
+    }
 };
+
+test BufReader {
+    var input: BufReader = .new("hello");
+    var output_buf: [10]u8 = undefined;
+    var output: []u8 = &output_buf;
+    output.len = try input.reader().read(output);
+    try std.testing.expectEqualStrings(output, "hello");
+}
 
 pub const BufWriter = struct {
     buf: []u8,
@@ -72,4 +86,15 @@ pub const BufWriter = struct {
     pub fn writer(self: *BufWriter) Writer(write) {
         return .new(self);
     }
+
+    pub fn new(buf: []u8) BufWriter {
+        return .{ .buf = buf };
+    }
 };
+
+test BufWriter {
+    var output_buf: [10]u8 = undefined;
+    var output: BufWriter = .new(&output_buf);
+    const written = try output.writer().write("hello");
+    try std.testing.expectEqualStrings(output_buf[0..written], "hello");
+}
