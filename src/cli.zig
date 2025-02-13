@@ -19,6 +19,7 @@
 const std = @import("std");
 const core = @import("root.zig");
 const string = core.string;
+const ascii = core.ascii;
 
 pub const OptionEntry = union(enum) {
     const Option = struct {
@@ -202,8 +203,22 @@ pub fn ArgParser(
         non_option_handler: ?NonOptionHandler = null,
 
         pub fn validate(comptime self: @This()) void {
-            if ((self.options.len > 0) and (self.option_handler == null)) {
-                @compileError("option_handler must be specified for options.");
+            if (self.options.len > 0) {
+                core.assert(
+                    self.option_handler != null,
+                    "option_handler must be specified",
+                );
+            }
+
+            for (self.options) |entry| {
+                if (entry == .option) {
+                    if (entry.option.short) |c| {
+                        core.assert(
+                            ascii.isAlphaNum(c),
+                            "short options must be alphanumeric",
+                        );
+                    }
+                }
             }
         }
 

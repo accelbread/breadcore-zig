@@ -16,37 +16,15 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-pub const io = @import("io.zig");
-pub const string = @import("string.zig");
-pub const ascii = @import("ascii.zig");
-pub const log = @import("log.zig");
-pub const cli = @import("cli.zig");
-pub const virt = @import("virt.zig");
-pub const testing = @import("testing.zig");
-
-pub fn assert(cond: bool, comptime reason: ?[]const u8) void {
-    if (@inComptime()) {
-        if (!cond) @compileError(reason orelse "assertion failed");
-    } else {
-        if (!cond) {
-            @branchHint(.cold);
-            @panic(reason orelse "assertion failed");
-        }
-    }
+pub fn isAlpha(c: u8) bool {
+    const lower = c | 0b00100000;
+    return 'a' <= lower and lower <= 'z';
 }
 
-pub fn assume(cond: bool) void {
-    if (!cond) unreachable;
+pub fn isNum(c: u8) bool {
+    return '0' <= c and c <= '9';
 }
 
-const std = @import("std");
-
-test {
-    _ = io;
-    _ = string;
-    _ = ascii;
-    _ = log;
-    _ = cli;
-    _ = virt;
-    _ = testing;
+pub fn isAlphaNum(c: u8) bool {
+    return isAlpha(c) or isNum(c);
 }
