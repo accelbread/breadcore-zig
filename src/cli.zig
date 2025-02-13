@@ -17,7 +17,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const std = @import("std");
-const assert = std.debug.assert;
+const core = @import("root.zig");
 
 pub const OptionEntry = union(enum) {
     const Option = struct {
@@ -248,7 +248,7 @@ pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
             state: *self.ParseState(),
             ctx: HandlerCtx,
         ) !void {
-            std.debug.assert(state.idx < state.argv.len);
+            core.assume(state.idx < state.argv.len);
 
             const rest = state.argv[state.idx + 1 ..];
 
@@ -274,7 +274,7 @@ pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
             opt: []const u8,
             value: ?[:0]const u8,
         ) !void {
-            std.debug.assert(state.idx < state.argv.len);
+            core.assume(state.idx < state.argv.len);
 
             const next = state.nextArg();
             var used_next = false;
@@ -294,8 +294,8 @@ pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
             opts: []const u8,
             value: ?[:0]const u8,
         ) !void {
-            std.debug.assert(state.idx < state.argv.len);
-            std.debug.assert(opts.len >= 1);
+            core.assume(state.idx < state.argv.len);
+            core.assume(opts.len >= 1);
 
             var rest = opts;
 
@@ -378,7 +378,7 @@ pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
             state: *self.ParseState(),
             ctx: HandlerCtx,
         ) !void {
-            std.debug.assert(state.idx < state.argv.len);
+            core.assume(state.idx < state.argv.len);
 
             const arg: [:0]const u8 = std.mem.span(state.argv[state.idx]);
             const arg_type = getArgType(arg);

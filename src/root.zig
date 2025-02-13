@@ -22,6 +22,21 @@ pub const cli = @import("cli.zig");
 pub const virt = @import("virt.zig");
 pub const testing = @import("testing.zig");
 
+pub fn assert(cond: bool, comptime reason: ?[]const u8) void {
+    if (@inComptime()) {
+        if (!cond) @compileError(reason orelse "assertion failed");
+    } else {
+        if (!cond) {
+            @branchHint(.cold);
+            @panic(reason orelse "assertion failed");
+        }
+    }
+}
+
+pub fn assume(cond: bool) void {
+    if (!cond) unreachable;
+}
+
 const std = @import("std");
 
 test {
