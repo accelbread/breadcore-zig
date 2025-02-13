@@ -18,6 +18,7 @@
 
 const std = @import("std");
 const core = @import("root.zig");
+const string = core.string;
 
 pub const OptionEntry = union(enum) {
     const Option = struct {
@@ -342,7 +343,7 @@ pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
                     const e = comptime entry.option;
                     const matches = match: {
                         if (t == .long) {
-                            break :match std.mem.eql(u8, e.long, opt);
+                            break :match string.equal(e.long, opt);
                         } else if (e.short) |s| {
                             break :match s == opt;
                         } else {
