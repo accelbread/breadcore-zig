@@ -161,8 +161,28 @@ test rotateSlice {
     try std.testing.expectEqualSlices(u8, &expected, &input);
 }
 
-pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
+pub const ArgParserConfig = struct {
+    HandlerCtx: type = void,
+    HandlerError: type = anyerror,
+    reorder: bool = true,
+
+    fn handler(Ctx: type, Error: type) @This() {
+        return .{ .HandlerCtx = Ctx, .HandlerError = Error };
+    }
+};
+
+pub fn ArgParser(
+    config: ArgParserConfig,
+) type {
     return struct {
+        const HandlerCtx = config.HandlerCtx;
+        const HandlerError = config.HandlerError;
+
+        const NonOptionHandler = if (config.reorder)
+            fn (ctx: HandlerCtx, args: [][*:0]const u8) HandlerError!void
+        else
+            fn (ctx: HandlerCtx, arg: [:0]const u8) HandlerError!void;
+
         version_info: ?VersionInfo = null,
         help_info: HelpInfo = .{},
         options: []const OptionEntry = &.{},
@@ -174,19 +194,12 @@ pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
             value: ?[:0]const u8,
         ) HandlerError!void = null,
 
-        /// Callback to call when non-option arg is found
+        /// Callback to call for non-option args
         /// If set to reorder, non-option args are moved to the end of argv and
         /// the callback is called once.
-        non_option_handler: ?union(enum) {
-            in_order: fn (
-                ctx: HandlerCtx,
-                arg: [:0]const u8,
-            ) HandlerError!void,
-            reorder: fn (
-                ctx: HandlerCtx,
-                args: [][*:0]const u8,
-            ) HandlerError!void,
-        } = null,
+        /// If not reordering, this is called for each non-option arg
+        /// encountered.
+        non_option_handler: ?NonOptionHandler = null,
 
         pub fn validate(comptime self: @This()) void {
             if ((self.options.len > 0) and (self.option_handler == null)) {
@@ -194,8 +207,8 @@ pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
             }
         }
 
-        fn shouldReorder(comptime self: @This()) bool {
-            return if (self.non_option_handler) |h| h == .reorder else false;
+        inline fn shouldReorder(comptime self: @This()) bool {
+            return config.reorder and (self.non_option_handler != null);
         }
 
         fn ParseState(comptime self: @This()) type {
@@ -206,16 +219,14 @@ pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
                     if (self.shouldReorder()) 0 else {},
 
                 fn maybeRotateArgs(state: *@This()) void {
-                    std.debug.assert(state.idx < state.argv.len);
+                    if (self.shouldReorder()) {
+                        core.assume(state.idx < state.argv.len);
 
-                    if (self.non_option_handler) |handler| {
-                        if (handler != .reorder) return;
-                    } else return;
-
-                    if (state.prev_non_opts > 0) {
-                        const start = state.idx - state.prev_non_opts;
-                        const end = state.idx + 1;
-                        rotateSlice([*:0]const u8, state.argv[start..end]);
+                        if (state.prev_non_opts > 0) {
+                            const start = state.idx - state.prev_non_opts;
+                            const end = state.idx + 1;
+                            rotateSlice([*:0]const u8, state.argv[start..end]);
+                        }
                     }
                 }
 
@@ -235,9 +246,10 @@ pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
             arg: [:0]const u8,
         ) !void {
             if (self.non_option_handler) |handler| {
-                switch (handler) {
-                    .in_order => |h| return h(ctx, arg),
-                    .reorder => state.prev_non_opts += 1,
+                if (config.reorder) {
+                    state.prev_non_opts += 1;
+                } else {
+                    handler(ctx, arg);
                 }
             } else {
                 return error.InvalidArg;
@@ -256,11 +268,10 @@ pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
             if (rest.len > 0) {
                 if (self.non_option_handler) |handler| {
                     state.idx = state.argv.len - 1;
-                    switch (handler) {
-                        .in_order => |h| for (rest) |a| {
-                            try h(ctx, std.mem.span(a));
-                        },
-                        .reorder => state.prev_non_opts += rest.len,
+                    if (config.reorder) {
+                        state.prev_non_opts += rest.len;
+                    } else for (rest) |a| {
+                        handler(ctx, std.mem.span(a));
                     }
                 } else {
                     return error.InvalidArg;
@@ -428,12 +439,9 @@ pub fn ArgParser(HandlerCtx: type, HandlerError: type) type {
                 try self.handleCurrentArg(&state, ctx);
             }
 
-            if (self.non_option_handler) |handler| {
-                if (handler == .reorder) {
-                    try handler.reorder(
-                        ctx,
-                        argv[argv.len - state.prev_non_opts ..],
-                    );
+            if (config.reorder) {
+                if (self.non_option_handler) |handler| {
+                    try handler(ctx, argv[argv.len - state.prev_non_opts ..]);
                 }
             }
         }
@@ -473,13 +481,13 @@ test ArgParser {
         }
     };
 
-    const MyArgs = ArgParser(*Settings, error{}){
+    const MyArgs = ArgParser(.handler(*Settings, error{})){
         .options = &.{
             .opt(.flag_a, 'a', null, ""),
             .opt(.flag_b, null, "thing", ""),
         },
         .option_handler = Handlers.option_handler,
-        .non_option_handler = .{ .reorder = Handlers.non_option_handler },
+        .non_option_handler = Handlers.non_option_handler,
     };
 
     // args will likely be `std.os.argv`

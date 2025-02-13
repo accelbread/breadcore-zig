@@ -20,7 +20,7 @@ const std = @import("std");
 const cli = @import("cli.zig");
 const EnumLiteral = @Type(.enum_literal);
 
-const TestArgsMin = cli.ArgParser(void, anyerror){
+const TestArgsMin = cli.ArgParser(.{}){
     .options = &.{
         .opt(.flag_a, null, null, ""),
         .opt(.flag_b, null, "file", ""),
@@ -46,7 +46,7 @@ test "Minimal happy path" {
     try TestArgsMin.parseArgs(&args, {});
 }
 
-const TestArgsVersion = cli.ArgParser(void, anyerror){
+const TestArgsVersion = cli.ArgParser(.{}){
     .version_info = .{
         .name = "Test App",
         .version = "0.0.0",
