@@ -63,7 +63,7 @@ pub fn Writer(writeFn: anytype) type {
     };
 }
 
-const Vtable = packed struct {
+const Vtable = struct {
     write_impl: *const fn (ctx: usize, buf: []const u8) anyerror!usize,
     ctx: usize,
 

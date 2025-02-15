@@ -77,7 +77,7 @@ pub fn Reader(readFn: anytype) type {
     };
 }
 
-const Vtable = packed struct {
+const Vtable = struct {
     read_impl: *const fn (ctx: usize, buf: []u8) anyerror!usize,
     ctx: usize,
 
