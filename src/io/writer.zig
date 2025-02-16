@@ -19,8 +19,8 @@
 const std = @import("std");
 const virt = @import("../virt.zig");
 
-pub fn Writer(writeFn: anytype) type {
-    const fn_info = @typeInfo(@TypeOf(writeFn)).@"fn";
+pub fn Writer(write_fn: anytype) type {
+    const fn_info = @typeInfo(@TypeOf(write_fn)).@"fn";
     const fn_ret_info = @typeInfo(fn_info.return_type.?);
 
     const WriteError = fn_ret_info.error_union.error_set;
@@ -36,10 +36,10 @@ pub fn Writer(writeFn: anytype) type {
         }
 
         pub inline fn write(self: Self, buf: []const u8) WriteError!usize {
-            return writeFn(self.ctx, buf);
+            return write_fn(self.ctx, buf);
         }
 
-        pub fn writeFull(self: Self, buf: []const u8) WriteError!void {
+        pub fn write_full(self: Self, buf: []const u8) WriteError!void {
             var rest: []const u8 = buf;
             while (rest.len > 0) {
                 const write_amt = try self.write(buf);
@@ -52,13 +52,13 @@ pub fn Writer(writeFn: anytype) type {
                 return self.*;
             }
             return .new(Vtable{
-                .write_impl = virtualWrite,
-                .ctx = virt.packUsizeCtx(Ctx, &self.ctx),
+                .write_impl = virtual_write,
+                .ctx = virt.pack_usize_ctx(Ctx, &self.ctx),
             });
         }
 
-        fn virtualWrite(ctx: usize, buf: []const u8) anyerror!usize {
-            return writeFn(virt.unpackUsizeCtx(Ctx, ctx), buf);
+        fn virtual_write(ctx: usize, buf: []const u8) anyerror!usize {
+            return write_fn(virt.unpack_usize_ctx(Ctx, ctx), buf);
         }
     };
 }

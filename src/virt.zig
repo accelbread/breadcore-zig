@@ -23,14 +23,14 @@ fn IntType(T: type) type {
     } });
 }
 
-pub fn packUsizeCtx(RealType: type, ref: *const RealType) usize {
+pub fn pack_usize_ctx(RealType: type, ref: *const RealType) usize {
     if (@sizeOf(RealType) <= @sizeOf(usize)) {
         return @as(*const IntType(RealType), @ptrCast(ref)).*;
     }
     return @intFromPtr(ref);
 }
 
-pub fn unpackUsizeCtx(RealType: type, ctx: usize) RealType {
+pub fn unpack_usize_ctx(RealType: type, ctx: usize) RealType {
     if (@sizeOf(RealType) <= @sizeOf(usize)) {
         const val: IntType(RealType) = @intCast(ctx);
         return @as(*const RealType, @ptrCast(&val)).*;

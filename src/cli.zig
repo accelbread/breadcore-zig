@@ -129,7 +129,7 @@ const ArgType = enum {
     option_terminator,
 };
 
-fn getArgType(arg: [:0]const u8) ArgType {
+fn get_arg_type(arg: [:0]const u8) ArgType {
     if ((arg.len <= 1) or (arg[0] != '-')) {
         return .non_option;
     }
@@ -142,23 +142,23 @@ fn getArgType(arg: [:0]const u8) ArgType {
     return .long_option;
 }
 
-test getArgType {
-    try std.testing.expectEqual(ArgType.non_option, getArgType("hello"));
-    try std.testing.expectEqual(ArgType.short_options, getArgType("-abc"));
-    try std.testing.expectEqual(ArgType.long_option, getArgType("--world"));
-    try std.testing.expectEqual(ArgType.option_terminator, getArgType("--"));
+test get_arg_type {
+    try std.testing.expectEqual(ArgType.non_option, get_arg_type("hello"));
+    try std.testing.expectEqual(ArgType.short_options, get_arg_type("-abc"));
+    try std.testing.expectEqual(ArgType.long_option, get_arg_type("--world"));
+    try std.testing.expectEqual(ArgType.option_terminator, get_arg_type("--"));
 }
 
-fn rotateSlice(T: type, slice: []T) void {
+fn rotate_slice(T: type, slice: []T) void {
     const last: T = slice[slice.len - 1];
     std.mem.copyBackwards(T, slice[1..slice.len], slice[0 .. slice.len - 1]);
     slice[0] = last;
 }
 
-test rotateSlice {
+test rotate_slice {
     var input = [_]u8{ 1, 2, 3, 4, 5 };
     const expected = [_]u8{ 5, 1, 2, 3, 4 };
-    rotateSlice(u8, &input);
+    rotate_slice(u8, &input);
     try std.testing.expectEqualSlices(u8, &expected, &input);
 }
 
@@ -214,7 +214,7 @@ pub fn ArgParser(
                 if (entry == .option) {
                     if (entry.option.short) |c| {
                         core.assert(
-                            ascii.isAlphaNum(c),
+                            ascii.is_alphanum(c),
                             "short options must be alphanumeric",
                         );
                     }
@@ -222,7 +222,7 @@ pub fn ArgParser(
             }
         }
 
-        inline fn shouldReorder(comptime self: @This()) bool {
+        inline fn should_reorder(comptime self: @This()) bool {
             return config.reorder and (self.non_option_handler != null);
         }
 
@@ -230,22 +230,22 @@ pub fn ArgParser(
             return struct {
                 argv: [][*:0]const u8,
                 idx: usize = 0,
-                prev_non_opts: if (self.shouldReorder()) usize else void =
-                    if (self.shouldReorder()) 0 else {},
+                prev_non_opts: if (self.should_reorder()) usize else void =
+                    if (self.should_reorder()) 0 else {},
 
-                fn maybeRotateArgs(state: *@This()) void {
-                    if (self.shouldReorder()) {
+                fn maybe_rotate_args(state: *@This()) void {
+                    if (self.should_reorder()) {
                         core.assume(state.idx < state.argv.len);
 
                         if (state.prev_non_opts > 0) {
                             const start = state.idx - state.prev_non_opts;
                             const end = state.idx + 1;
-                            rotateSlice([*:0]const u8, state.argv[start..end]);
+                            rotate_slice([*:0]const u8, state.argv[start..end]);
                         }
                     }
                 }
 
-                fn nextArg(state: *@This()) ?[*:0]const u8 {
+                fn next_arg(state: *@This()) ?[*:0]const u8 {
                     return if (state.idx < state.argv.len - 1)
                         state.argv[state.idx + 1]
                     else
@@ -254,7 +254,7 @@ pub fn ArgParser(
             };
         }
 
-        fn handleNonOption(
+        fn handle_non_option(
             comptime self: @This(),
             state: *self.ParseState(),
             ctx: HandlerCtx,
@@ -271,7 +271,7 @@ pub fn ArgParser(
             }
         }
 
-        fn handleOptionTerminator(
+        fn handle_option_terminator(
             comptime self: @This(),
             state: *self.ParseState(),
             ctx: HandlerCtx,
@@ -294,7 +294,7 @@ pub fn ArgParser(
             }
         }
 
-        fn handleLongOpt(
+        fn handle_long_opt(
             comptime self: @This(),
             state: *self.ParseState(),
             ctx: HandlerCtx,
@@ -303,18 +303,18 @@ pub fn ArgParser(
         ) !void {
             core.assume(state.idx < state.argv.len);
 
-            const next = state.nextArg();
+            const next = state.next_arg();
             var used_next = false;
 
-            try self.dispatchOpt(.long, ctx, opt, value, next, &used_next);
+            try self.dispatch_opt(.long, ctx, opt, value, next, &used_next);
 
             if (used_next) {
                 state.idx += 1;
-                state.maybeRotateArgs();
+                state.maybe_rotate_args();
             }
         }
 
-        fn handleShortOpts(
+        fn handle_short_opts(
             comptime self: @This(),
             state: *self.ParseState(),
             ctx: HandlerCtx,
@@ -336,7 +336,7 @@ pub fn ArgParser(
                 }
                 var used_next = false;
 
-                try self.dispatchOpt(.short, ctx, s, value, next, &used_next);
+                try self.dispatch_opt(.short, ctx, s, value, next, &used_next);
 
                 if (used_next) {
                     return;
@@ -344,18 +344,18 @@ pub fn ArgParser(
             }
 
             const s = rest[0];
-            const next = state.nextArg();
+            const next = state.next_arg();
             var used_next = false;
 
-            try self.dispatchOpt(.short, ctx, s, value, next, &used_next);
+            try self.dispatch_opt(.short, ctx, s, value, next, &used_next);
 
             if (used_next) {
                 state.idx += 1;
-                state.maybeRotateArgs();
+                state.maybe_rotate_args();
             }
         }
 
-        fn dispatchOpt(
+        fn dispatch_opt(
             comptime self: @This(),
             comptime t: enum { long, short },
             ctx: HandlerCtx,
@@ -400,7 +400,7 @@ pub fn ArgParser(
             return error.InvalidOption;
         }
 
-        fn handleCurrentArg(
+        fn handle_current_arg(
             comptime self: @This(),
             state: *self.ParseState(),
             ctx: HandlerCtx,
@@ -408,16 +408,16 @@ pub fn ArgParser(
             core.assume(state.idx < state.argv.len);
 
             const arg: [:0]const u8 = std.mem.span(state.argv[state.idx]);
-            const arg_type = getArgType(arg);
+            const arg_type = get_arg_type(arg);
 
             if (arg_type == .non_option) {
-                return self.handleNonOption(state, ctx, arg);
+                return self.handle_non_option(state, ctx, arg);
             }
 
-            state.maybeRotateArgs();
+            state.maybe_rotate_args();
 
             if (arg_type == .option_terminator) {
-                return self.handleOptionTerminator(state, ctx);
+                return self.handle_option_terminator(state, ctx);
             }
 
             const opt: []const u8, const value: ?[:0]const u8 = split: {
@@ -436,13 +436,18 @@ pub fn ArgParser(
             };
 
             return switch (arg_type) {
-                .long_option => self.handleLongOpt(state, ctx, opt, value),
-                .short_options => self.handleShortOpts(state, ctx, opt, value),
+                .long_option => self.handle_long_opt(state, ctx, opt, value),
+                .short_options => self.handle_short_opts(
+                    state,
+                    ctx,
+                    opt,
+                    value,
+                ),
                 else => unreachable,
             };
         }
 
-        pub fn parseArgs(
+        pub fn parse_args(
             comptime self: @This(),
             argv: [][*:0]const u8,
             ctx: HandlerCtx,
@@ -451,7 +456,7 @@ pub fn ArgParser(
 
             var state: self.ParseState() = .{ .argv = argv };
             while (state.idx < argv.len) : (state.idx += 1) {
-                try self.handleCurrentArg(&state, ctx);
+                try self.handle_current_arg(&state, ctx);
             }
 
             if (config.reorder) {
@@ -470,7 +475,7 @@ test ArgParser {
         arg_count: u16 = 0,
     };
 
-    const Handlers = struct {
+    const handlers = struct {
         fn option_handler(
             ctx: *Settings,
             comptime option: @Type(.enum_literal),
@@ -501,8 +506,8 @@ test ArgParser {
             .opt(.flag_a, 'a', null, ""),
             .opt(.flag_b, null, "thing", ""),
         },
-        .option_handler = Handlers.option_handler,
-        .non_option_handler = Handlers.non_option_handler,
+        .option_handler = handlers.option_handler,
+        .non_option_handler = handlers.non_option_handler,
     };
 
     // args will likely be `std.os.argv`
@@ -511,7 +516,7 @@ test ArgParser {
 
     const expected = [_][*:0]const u8{ args[0], args[2], args[3], args[1] };
 
-    try MyArgs.parseArgs(&args, &settings);
+    try MyArgs.parse_args(&args, &settings);
 
     try std.testing.expectEqualSlices([*:0]const u8, &expected, &args);
 }

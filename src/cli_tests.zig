@@ -43,7 +43,7 @@ const TestArgsMin = cli.ArgParser(.{}){
 
 test "Minimal happy path" {
     var args = [_][*:0]const u8{ "--flag-b", "--flag-a", "-c", "-d" };
-    try TestArgsMin.parseArgs(&args, {});
+    try TestArgsMin.parse_args(&args, {});
 }
 
 const TestArgsVersion = cli.ArgParser(.{}){

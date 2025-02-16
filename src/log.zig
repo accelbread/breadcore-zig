@@ -18,7 +18,7 @@
 
 const std = @import("std");
 
-pub fn logFn(
+pub fn log_fn(
     comptime level: std.log.Level,
     comptime scope: @TypeOf(.enum_literal),
     comptime format: []const u8,

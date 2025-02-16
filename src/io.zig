@@ -28,20 +28,20 @@ const writer = @import("io/writer.zig");
 pub const Writer = writer.Writer;
 pub const DynWriter = writer.DynWriter;
 
-fn nullRead(self: void, buf: []u8) error{}!usize {
+fn null_read(self: void, buf: []u8) error{}!usize {
     _ = self;
     _ = buf;
     return 0;
 }
 
-pub const null_reader = Reader(nullRead).new({});
+pub const null_reader = Reader(null_read).new({});
 
-fn nullWrite(self: void, buf: []const u8) error{InsufficientSpace}!usize {
+fn null_write(self: void, buf: []const u8) error{InsufficientSpace}!usize {
     _ = self;
     return if (buf.len == 0) 0 else error.InsufficientSpace;
 }
 
-pub const null_writer = Writer(nullWrite).new({});
+pub const null_writer = Writer(null_write).new({});
 
 pub const BufReader = struct {
     buf: []const u8,

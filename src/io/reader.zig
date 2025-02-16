@@ -19,8 +19,8 @@
 const std = @import("std");
 const virt = @import("../virt.zig");
 
-pub fn Reader(readFn: anytype) type {
-    const fn_info = @typeInfo(@TypeOf(readFn)).@"fn";
+pub fn Reader(read_fn: anytype) type {
+    const fn_info = @typeInfo(@TypeOf(read_fn)).@"fn";
     const fn_ret_info = @typeInfo(fn_info.return_type.?);
 
     const ReadError = fn_ret_info.error_union.error_set;
@@ -36,10 +36,10 @@ pub fn Reader(readFn: anytype) type {
         }
 
         pub inline fn read(self: Self, buf: []u8) ReadError!usize {
-            return readFn(self.ctx, buf);
+            return read_fn(self.ctx, buf);
         }
 
-        pub fn readFull(self: Self, buf: []u8) ReadError!usize {
+        pub fn read_full(self: Self, buf: []u8) ReadError!usize {
             var rest: []u8 = buf;
             while (rest.len > 0) {
                 const read_amt = try self.read(buf);
@@ -51,11 +51,11 @@ pub fn Reader(readFn: anytype) type {
             return buf.len;
         }
 
-        pub fn readExact(
+        pub fn read_exact(
             self: Self,
             buf: []u8,
         ) (ReadError || error{UnexpectedEof})!void {
-            const read_amt = try self.readFull(buf);
+            const read_amt = try self.read_full(buf);
             if (read_amt != buf.len) {
                 return error.UnexpectedEof;
             }
@@ -66,13 +66,13 @@ pub fn Reader(readFn: anytype) type {
                 return self.*;
             }
             return .new(Vtable{
-                .read_impl = virtualRead,
-                .ctx = virt.packUsizeCtx(Ctx, &self.ctx),
+                .read_impl = virtual_read,
+                .ctx = virt.pack_usize_ctx(Ctx, &self.ctx),
             });
         }
 
-        fn virtualRead(ctx: usize, buf: []u8) anyerror!usize {
-            return readFn(virt.unpackUsizeCtx(Ctx, ctx), buf);
+        fn virtual_read(ctx: usize, buf: []u8) anyerror!usize {
+            return read_fn(virt.unpack_usize_ctx(Ctx, ctx), buf);
         }
     };
 }

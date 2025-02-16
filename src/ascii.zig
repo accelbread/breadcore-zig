@@ -16,15 +16,15 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-pub fn isAlpha(c: u8) bool {
+pub fn is_alpha(c: u8) bool {
     const lower = c | 0b00100000;
     return 'a' <= lower and lower <= 'z';
 }
 
-pub fn isNum(c: u8) bool {
+pub fn is_num(c: u8) bool {
     return '0' <= c and c <= '9';
 }
 
-pub fn isAlphaNum(c: u8) bool {
-    return isAlpha(c) or isNum(c);
+pub fn is_alphanum(c: u8) bool {
+    return is_alpha(c) or is_num(c);
 }
